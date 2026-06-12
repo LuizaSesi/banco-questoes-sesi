@@ -165,7 +165,7 @@ body{font-family:'Montserrat',sans-serif;background:var(--navy);color:var(--whit
     <strong>4. Gabarito:</strong> Clique em "Ver Gabarito" para revelar a resposta correta em verde.<br><br>
     <strong>Submeter novas questões</strong><br>
     Sugestões passam por validação antes de entrar no banco.<br>
-    <a class="btn-forms" href="https://forms.gle/exemplo" target="_blank">Acessar formulário de submissão →</a>
+    <a class="btn-forms" href="https://forms.office.com/r/khvzvphyUS" target="_blank">Acessar formulário de submissão →</a>
   </div>
   <div class="filtros">
     <div class="filtro-group">
@@ -335,7 +335,7 @@ function filtrar(){
     const mb=!busca||q.enunciado.toLowerCase().includes(busca)||(q.pergunta||'').toLowerCase().includes(busca)||(q.habilidades||[]).join(' ').toLowerCase().includes(busca)||q.alternativas.some(a=>a.texto.toLowerCase().includes(busca));
     return mb&&(!disc||q.disciplina===disc)&&(!tipo||q.tipo_prova===tipo);
   });
-  document.getElementById('contador').innerHTML=`Mostrando <strong>${res.length}</strong> questão${res.length!==1?'ões':''}`;
+  document.getElementById('contador').innerHTML=`Mostrando <strong>${res.length}</strong> ${res.length!==1?'questões':'questão'}`;
   const grid=document.getElementById('grid');
   if(!res.length){grid.innerHTML='<div class="vazio">Nenhuma questão encontrada.</div>';return;}
   grid.innerHTML=res.map((q,i)=>renderCard(q,i*40)).join('');
@@ -373,7 +373,7 @@ function toggleSel(num){selecionadas.has(num)?selecionadas.delete(num):seleciona
 function atualizarBarraSel(){
   const n=selecionadas.size;
   document.getElementById('selecao-bar').classList.toggle('ativa',n>0);
-  document.getElementById('sel-info').textContent=`${n} questão${n!==1?'ões':''} selecionada${n!==1?'s':''}`;
+  document.getElementById('sel-info').textContent=`${n} ${n!==1?'questões':'questão'} selecionada${n!==1?'s':''}`;
 }
 function limparSelecao(){selecionadas.clear();atualizarBarraSel();filtrar();}
 
