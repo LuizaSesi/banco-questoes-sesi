@@ -263,7 +263,7 @@ body{font-family:'Montserrat',sans-serif;background:var(--navy);color:var(--whit
 
     <div class="modal-cab-btns">
       <button class="btn-cancelar-cab" onclick="fecharModalCab()">Cancelar</button>
-      <button class="btn-confirmar" onclick="confirmarCabecalho()">Gerar PDF da Ficha →</button>
+      <button class="btn-confirmar" onclick="confirmarCabecalho()">Gerar Prévia da Ficha →</button>
     </div>
   </div>
 </div>
@@ -458,159 +458,187 @@ function confirmarCabecalho(){
 }
 
 /* =====================================================================
-   GERAÇÃO DE PDF — Modelo de Ficha SESI-PE aprovado
+   GERAÇÃO DE FICHA — abre prévia HTML numa nova aba para impressão/PDF
    ===================================================================== */
 function abrirPreviaFicha(d){
-  if(!window.jspdf){alert('jsPDF não carregou. Verifique sua conexão.');return;}
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({unit:'mm',format:'a4'});
-  const W=210, mL=15, mR=15, mT=18, mB=20;
-  const cW = W - mL - mR;
-  const azul=[26,79,160], verde=[90,176,48], preto=[0,0,0], cinza=[150,150,150];
-  let y = mT;
+  const { unidade, professor, disciplina, titulo, conteudo, questoes } = d;
 
-  function rodape(){
-    const yR = 297 - mB + 4;
-    doc.setDrawColor(...cinza); doc.setLineWidth(0.3);
-    doc.line(mL, yR - 6, W - mR, yR - 6);
-    doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(...azul);
-    doc.text('SESI', mL, yR - 2);
-    doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
-    doc.text('Serviço Social da Indústria', mL, yR + 1);
-    doc.text(d.unidade.nome, W/2, yR - 2, {align:'center'});
-    doc.text(d.unidade.endereco, W/2, yR + 1, {align:'center'});
-    doc.text(d.unidade.telefone, W - mR, yR - 2, {align:'right'});
-    doc.text('www.pe.sesi.org.br', W - mR, yR + 1, {align:'right'});
-    doc.setFillColor(...verde);
-    doc.triangle(W-mR-14, yR-6, W-mR, yR-6, W-mR, yR+2, 'F');
-  }
+  const itensConteudo = conteudo
+    ? conteudo.split('\n').filter(l=>l.trim()).map(l=>`<li>${l.trim()}</li>`).join('')
+    : '';
 
-  function cabTopo(){
-    doc.setFont('helvetica','bolditalic'); doc.setFontSize(22);
-    doc.setTextColor(...azul);
-    doc.text('SES', mL, y+8);
-    const w = doc.getTextWidth('SES');
-    doc.setTextColor(...verde);
-    doc.text('i', mL+w, y+8);
-    doc.setFillColor(...azul);
-    doc.triangle(W-mR-34, y, W-mR, y, W-mR, y+14, 'F');
-    doc.setFillColor(...verde);
-    doc.triangle(W-mR-18, y, W-mR, y, W-mR, y+14, 'F');
-    y += 16;
-    doc.setDrawColor(...azul); doc.setLineWidth(0.6);
-    doc.line(mL, y, W-mR, y);
-    y += 4;
-  }
-
-  function check(n){
-    if(y + n > 297 - mB){
-      rodape(); doc.addPage(); y = mT; cabTopo();
-    }
-  }
-
-  cabTopo();
-
-  // Bloco aluno
-  doc.setDrawColor(...cinza); doc.setLineWidth(0.3);
-  doc.rect(mL, y, cW, 22);
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...azul);
-  doc.text('UNIDADE SESI:', mL+2, y+5);
-  doc.setFont('helvetica','normal'); doc.setTextColor(...preto);
-  doc.text(d.unidade.nome.replace('Escola SESI: ',''), mL+28, y+5);
-  doc.setFont('helvetica','bold'); doc.setTextColor(...azul);
-  doc.text('TURMA:', W/2+2, y+5);
-  doc.line(mL, y+8, W-mR, y+8);
-  doc.text('ESTUDANTE:', mL+2, y+13);
-  doc.line(mL, y+16, W-mR, y+16);
-  doc.text('DATA:', mL+2, y+21);
-  doc.line(mL+10, y+22, mL+38, y+22);
-  doc.text('DISCIPLINA:', mL+42, y+21);
-  doc.setFont('helvetica','normal'); doc.setTextColor(...preto);
-  doc.text(d.disciplina, mL+58, y+21);
-  doc.setFont('helvetica','bold'); doc.setTextColor(...azul);
-  doc.text('PROFESSOR(A):', W/2+2, y+21);
-  doc.setFont('helvetica','normal'); doc.setTextColor(...preto);
-  doc.text(d.professor, W/2+25, y+21);
-  y += 26;
-
-  // Título
-  check(12);
-  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(...azul);
-  doc.text(d.titulo.toUpperCase(), W/2, y+7, {align:'center'});
-  y += 12;
-
-  // Conteúdo vivenciado
-  const itens = d.conteudo ? d.conteudo.split('\n').filter(l=>l.trim()) : [];
-  const cvH = Math.max(12, 6 + itens.length * 5);
-  check(cvH + 4);
-  doc.setDrawColor(...cinza); doc.rect(mL, y, cW, cvH);
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...azul);
-  doc.text('Conteúdo vivenciado para esta avaliação:', mL+2, y+4);
-  doc.setFont('helvetica','normal'); doc.setTextColor(...preto);
-  if(itens.length) itens.forEach((item,i)=>doc.text('• '+item, mL+4, y+9+i*5));
-  else{ doc.setTextColor(...cinza); doc.text('(não informado)', mL+4, y+9); }
-  y += cvH + 4;
-
-  // Recomendações + Desempenho
-  check(38);
-  const recH = 34;
-  doc.setDrawColor(...cinza); doc.rect(mL, y, cW, recH);
-  doc.line(mL+(cW*0.65), y, mL+(cW*0.65), y+recH);
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...azul);
-  doc.text('RECOMENDAÇÕES:', mL+2, y+5);
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(...preto);
-  ['1. Preencha os dados do cabeçalho a caneta;',
-   '2. As questões devem ser respondidas a caneta;',
-   '3. Interpretar e decidir sobre cada questão cabe ao aluno;',
-   '4. Não serão aceitas questões rasuradas ou com 2+ alternativas;',
-   '5. Não utilize o aparelho celular durante a avaliação.'
-  ].forEach((r,i)=>doc.text(r, mL+2, y+10+i*5));
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(...azul);
-  doc.text('Desempenho', mL+(cW*0.65)+2, y+5);
-  y += recH + 4;
-
-  // Separador azul
-  check(6);
-  doc.setDrawColor(...azul); doc.setLineWidth(0.8);
-  doc.line(mL, y, W-mR, y);
-  y += 6;
-
-  // Questões
-  d.questoes.forEach((q,idx)=>{
-    check(14);
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...azul);
-    doc.text('Questão '+String(idx+1).padStart(2,'0'), mL, y);
-    y += 5;
-
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(...preto);
-    const eLines = doc.splitTextToSize(q.enunciado, cW);
-    check(eLines.length*4.5+3);
-    doc.text(eLines, mL, y);
-    y += eLines.length*4.5+2;
-
-    if(q.pergunta){
-      const pLines = doc.splitTextToSize(q.pergunta, cW);
-      check(pLines.length*4.5+3);
-      doc.setFont('helvetica','bold');
-      doc.text(pLines, mL, y);
-      doc.setFont('helvetica','normal');
-      y += pLines.length*4.5+2;
-    }
-
-    q.alternativas.forEach(a=>{
-      const aLines = doc.splitTextToSize(a.texto, cW-10);
-      check(aLines.length*4.5+2);
-      doc.setFont('helvetica','bold'); doc.setTextColor(...azul);
-      doc.text(a.letra+')', mL+2, y);
-      doc.setFont('helvetica','normal'); doc.setTextColor(...preto);
-      doc.text(aLines, mL+10, y);
-      y += aLines.length*4.5+1;
+  let questoesHtml = '';
+  questoes.forEach((q, idx) => {
+    let imgsHtml = '';
+    (q.imagens||[]).forEach(ref => {
+      if(IMGS[ref]) imgsHtml += `<img src="${IMGS[ref]}" class="q-img" alt="">`;
+      else imgsHtml += `<img src="imagens/${ref}.png" class="q-img" alt="" onerror="this.style.display='none'">`;
     });
-    y += 4;
+    const altsHtml = q.alternativas.map(a =>
+      `<div class="alt-row"><span class="alt-l">${a.letra})</span><span>${a.texto}</span></div>`
+    ).join('');
+    questoesHtml += `
+    <div class="questao">
+      <div class="q-num">Questão ${String(idx+1).padStart(2,'0')}</div>
+      <div class="q-enunciado">${q.enunciado}</div>
+      ${imgsHtml}
+      ${q.pergunta ? `<div class="q-pergunta">${q.pergunta}</div>` : ''}
+      <div class="q-alts">${altsHtml}</div>
+    </div>`;
   });
 
-  rodape();
-  doc.save('Ficha_SESI_'+d.disciplina.replace(/\s/g,'_')+'.pdf');
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Ficha SESI-PE</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Arial,sans-serif;font-size:10pt;color:#000;background:#fff;}
+
+  /* Barra de impressão — some no print */
+  .print-bar{background:#1a4fa0;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:999;}
+  .print-bar span{font-weight:700;font-size:13px;}
+  .print-bar button{border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;padding:7px 18px;}
+  .btn-impr{background:#5ab030;color:#fff;}
+  .btn-fechar{background:rgba(255,255,255,.2);color:#fff;}
+  @media print{.print-bar{display:none;}}
+
+  /* Página A4 */
+  .pagina{width:210mm;margin:0 auto;padding:16mm 18mm 20mm;min-height:297mm;}
+
+  /* Cabeçalho */
+  .cab{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:6px;border-bottom:2px solid #1a4fa0;margin-bottom:8px;}
+  .logo{font-size:28pt;font-weight:900;font-style:italic;color:#1a4fa0;line-height:1;}
+  .logo span{color:#5ab030;}
+  .tarja{width:110px;height:26px;background:linear-gradient(105deg,#1a4fa0 58%,#5ab030 58%);}
+
+  /* Bloco aluno */
+  .aluno{border:1px solid #aaa;margin-bottom:8px;}
+  .aluno-linha{display:flex;gap:0;border-bottom:1px solid #ddd;padding:4px 8px;font-size:8.5pt;}
+  .aluno-linha:last-child{border-bottom:none;}
+  .aluno-linha span{flex:1;}
+  .aluno-linha span + span{border-left:1px solid #ddd;padding-left:8px;}
+  .label{font-weight:700;color:#1a4fa0;margin-right:4px;}
+  .linha-preen{display:inline-block;border-bottom:1px solid #aaa;min-width:80px;}
+
+  /* Título */
+  .titulo{text-align:center;font-size:13pt;font-weight:700;color:#1a4fa0;text-transform:uppercase;margin:8px 0;}
+
+  /* Conteúdo vivenciado */
+  .conteudo-box{border:1px solid #aaa;padding:6px 8px;margin-bottom:8px;font-size:8.5pt;}
+  .conteudo-box .label{display:block;margin-bottom:3px;}
+  .conteudo-box ul{padding-left:16px;}
+  .conteudo-box li{margin-bottom:2px;}
+
+  /* Recomendações + Desempenho */
+  .rec-desemp{display:flex;border:1px solid #aaa;margin-bottom:10px;font-size:8.5pt;}
+  .rec{flex:2;padding:6px 8px;border-right:1px solid #aaa;}
+  .rec .label{display:block;margin-bottom:4px;}
+  .rec ol{padding-left:16px;}
+  .rec li{margin-bottom:3px;line-height:1.4;}
+  .desemp{flex:1;padding:6px 8px;}
+  .desemp .label{display:block;}
+
+  /* Separador */
+  .sep{border:none;border-top:2px solid #1a4fa0;margin:8px 0;}
+
+  /* Questões */
+  .questao{margin-bottom:16px;page-break-inside:avoid;}
+  .q-num{font-weight:700;color:#1a4fa0;font-size:9pt;margin-bottom:4px;}
+  .q-enunciado{font-size:9.5pt;line-height:1.6;margin-bottom:5px;}
+  .q-pergunta{font-size:9.5pt;font-weight:700;line-height:1.6;margin-bottom:5px;}
+  .q-img{max-width:100%;display:block;margin:6px 0;}
+  .q-alts{margin-left:6px;}
+  .alt-row{display:flex;gap:6px;margin-bottom:3px;font-size:9.5pt;line-height:1.5;}
+  .alt-l{font-weight:700;color:#1a4fa0;min-width:14px;}
+
+  /* Rodapé */
+  .rodape{border-top:1px solid #ccc;padding-top:5px;font-size:7.5pt;display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px;gap:8px;}
+  .rod-esq{font-weight:700;color:#1a4fa0;line-height:1.5;}
+  .rod-meio{text-align:center;color:#444;line-height:1.5;}
+  .rod-dir{text-align:right;color:#444;line-height:1.5;display:flex;align-items:flex-end;gap:6px;}
+  .tarja-verde{width:50px;height:12px;background:#5ab030;transform:skewX(-16deg);display:inline-block;}
+</style>
+</head>
+<body>
+
+<div class="print-bar">
+  <span>📄 Ficha SESI-PE — Prévia</span>
+  <button class="btn-impr" onclick="window.print()">🖨 Imprimir / Salvar como PDF</button>
+  <button class="btn-fechar" onclick="window.close()">✕ Fechar</button>
+</div>
+
+<div class="pagina">
+
+  <!-- CABEÇALHO -->
+  <div class="cab">
+    <div class="logo">SES<span>i</span></div>
+    <div class="tarja"></div>
+  </div>
+
+  <!-- BLOCO ALUNO -->
+  <div class="aluno">
+    <div class="aluno-linha">
+      <span><span class="label">UNIDADE SESI:</span>${unidade.nome.replace('Escola SESI: ','')}</span>
+      <span><span class="label">TURMA:</span><span class="linha-preen">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>
+    </div>
+    <div class="aluno-linha">
+      <span><span class="label">ESTUDANTE:</span><span class="linha-preen" style="min-width:320px;">&nbsp;</span></span>
+    </div>
+    <div class="aluno-linha">
+      <span><span class="label">DATA:</span><span class="linha-preen">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>
+      <span><span class="label">DISCIPLINA:</span>${disciplina}</span>
+      <span><span class="label">PROFESSOR(A):</span>${professor}</span>
+    </div>
+  </div>
+
+  <!-- TÍTULO -->
+  <div class="titulo">${titulo}</div>
+
+  <!-- CONTEÚDO VIVENCIADO -->
+  <div class="conteudo-box">
+    <span class="label">Conteúdo vivenciado para esta avaliação:</span>
+    ${itensConteudo ? `<ul>${itensConteudo}</ul>` : '<span style="color:#999">(não informado)</span>'}
+  </div>
+
+  <!-- RECOMENDAÇÕES + DESEMPENHO -->
+  <div class="rec-desemp">
+    <div class="rec">
+      <span class="label">RECOMENDAÇÕES:</span>
+      <ol>
+        <li>Preencha os dados do cabeçalho a caneta;</li>
+        <li>As questões devem ser respondidas a caneta;</li>
+        <li>Interpretar e decidir sobre cada questão cabe única e exclusivamente ao aluno;</li>
+        <li>Não serão aceitas questões rasuradas ou com mais de uma alternativa;</li>
+        <li>Não utilize o aparelho celular durante a avaliação.</li>
+      </ol>
+    </div>
+    <div class="desemp">
+      <span class="label">Desempenho</span>
+    </div>
+  </div>
+
+  <!-- SEPARADOR -->
+  <hr class="sep">
+
+  <!-- QUESTÕES -->
+  ${questoesHtml}
+
+  <!-- RODAPÉ -->
+  <div class="rodape">
+    <div class="rod-esq">SESI<br>Serviço Social da Indústria</div>
+    <div class="rod-meio">${unidade.nome}<br>${unidade.endereco}</div>
+    <div class="rod-dir">${unidade.telefone}<br>www.pe.sesi.org.br<span class="tarja-verde"></span></div>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  if(win){ win.document.write(html); win.document.close(); }
+  else alert('Habilite pop-ups para visualizar a ficha.');
 }
 
 /* =====================================================================
