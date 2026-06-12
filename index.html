@@ -191,6 +191,14 @@ body{font-family:'Montserrat',sans-serif;background:var(--navy);color:var(--whit
         <option>PASSE</option>
       </select>
     </div>
+    <div class="filtro-group">
+      <label>Segmento</label>
+      <select id="sel-seg" onchange="filtrar()">
+        <option value="">Todos</option>
+        <option value="EM">Ensino Médio</option>
+        <option value="EF">Ensino Fundamental</option>
+      </select>
+    </div>
     <button class="btn-limpar" onclick="limpar()">Limpar</button>
   </div>
   <div class="selecao-bar" id="selecao-bar">
@@ -331,16 +339,18 @@ function filtrar(){
   const busca=document.getElementById('busca').value.toLowerCase();
   const disc=document.getElementById('sel-disc').value;
   const tipo=document.getElementById('sel-tipo').value;
+  const seg=document.getElementById('sel-seg').value;
   const res=QUESTOES.filter(q=>{
     const mb=!busca||q.enunciado.toLowerCase().includes(busca)||(q.pergunta||'').toLowerCase().includes(busca)||(q.habilidades||[]).join(' ').toLowerCase().includes(busca)||q.alternativas.some(a=>a.texto.toLowerCase().includes(busca));
-    return mb&&(!disc||q.disciplina===disc)&&(!tipo||q.tipo_prova===tipo);
+    const segOk=!seg||(q.habilidades||[]).some(h=>h.includes('.'+seg));
+    return mb&&(!disc||q.disciplina===disc)&&(!tipo||q.tipo_prova===tipo)&&segOk;
   });
   document.getElementById('contador').innerHTML=`Mostrando <strong>${res.length}</strong> ${res.length!==1?'questões':'questão'}`;
   const grid=document.getElementById('grid');
   if(!res.length){grid.innerHTML='<div class="vazio">Nenhuma questão encontrada.</div>';return;}
   grid.innerHTML=res.map((q,i)=>renderCard(q,i*40)).join('');
 }
-function limpar(){document.getElementById('busca').value='';document.getElementById('sel-disc').value='';document.getElementById('sel-tipo').value='';filtrar();}
+function limpar(){document.getElementById('busca').value='';document.getElementById('sel-disc').value='';document.getElementById('sel-tipo').value='';document.getElementById('sel-seg').value='';filtrar();}
 
 /* =====================================================================
    GABARITO (in-place, sem re-render do grid inteiro)
